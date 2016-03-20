@@ -91,7 +91,7 @@ def get_map(points):
         y = int(math.floor(p.y - ymin))
         l[y][x].append(p)
 
-    return l, xmin, ymin
+    return l, dx, dy
 
 
 def read_from_file(name):
@@ -182,17 +182,17 @@ def union_sets(p, q, set_list):
 
     set_list[small_index] = []
 
-def neighbours(l):
+def neighbours(l, dx, dy):
     set_list = []
     bar = progressbar.ProgressBar()
-    for i in bar(range(0,583)):
-        for j in range(0,512):
+    for i in bar(range(0,dx)):
+        for j in range(0,dy):
             for p in l[i][j]:
                 if p.point_set is None:
                     s = [p]
                     set_list.append(s)
                     p.point_set = len(set_list) - 1
-                find_neighbour(l, p, i, j, 0.5, 582,511, set_list)
+                find_neighbour(l, p, i, j, 0.5, dx-1, dy-1, set_list)
     return set_list
 
 
