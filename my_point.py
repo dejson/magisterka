@@ -20,9 +20,7 @@ class MyPoint(object):
     def is_neighbour(self, p):
         distance = self.get_distance(p)
 
-        if distance < 0.3:
-            return True
-        elif distance < 0.6 and self.classification == p.classification and self.classification != 0:
+        if distance < 0.5:
             return True
 
         return False

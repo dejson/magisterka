@@ -6,7 +6,9 @@ import math
 import random
 from liblas import file
 from my_point import MyPoint
+from my_set import MySet
 import progressbar
+import random
  
 def alpha_shape(points, alpha):
     """
@@ -110,33 +112,31 @@ def read_from_file(name):
 
 
 def get_distance(p, q):
-    x = abs(p[0] - q[0])
-    y = abs(p[1] - q[1])
-    z = abs(p[2] - q[2])
+    x = abs(p.x - q.x)
+    y = abs(p.y - q.y)
+    z = abs(p.z - q.z)
 
     d = math.sqrt(x*x + y*y + z*z)
 
     return d
 
 
-def find_neighbour(l, p, a, b, d, xmax, ymax, set_list):
+def find_neighbour(l, p, a, b, xmax, ymax, set_list):
     """
     l - point map
     p - point
     a,b - quad that point p is in
-    s - set that point p is in
-    d - distance
     """
 
     x = p.x - math.floor(p.x)
     y = p.y - math.floor(p.y)
 
-    if x - d < 0:
+    if x - 0.5 < 0:
         x = -1
     else:
         x = 1
 
-    if y - d < 0:
+    if y - 0.5 < 0:
         y = -1
     else:
         y = 1
@@ -152,19 +152,66 @@ def find_neighbour(l, p, a, b, d, xmax, ymax, set_list):
 
     usless_x = 0
 
+    ss = []
+
+    #get list of sets in neighbehood
     for n_list in n:
         for point in n_list:
             if point is not p:
                 if p.is_neighbour(point):
-                    if point.point_set is None:
-                        set_list[p.point_set].append(point)
-                        point.point_set = p.point_set
-                        usless_x = 2
-                    elif point.point_set != p.point_set:
-                        union_sets(point.point_set, p.point_set, set_list)
-                        usless_x = 1
-                    else:
-                        usless_x = 0
+                    if point.point_set:
+                        found = False
+                        for d in ss:
+                            if d['set'] is point.point_set and d['distance'] > get_distance(p, point):
+                                d['distance'] = get_distance(p, point)
+                                found = True
+
+                        if found is False:
+                            ss.append({
+                                'distance': get_distance(p, point),
+                                'set': point.point_set
+                                })
+
+
+    if not ss:
+        s = MySet(p)
+        set_list.append(s)
+        p.point_set = s
+        return
+
+    # calculate which set suits best
+    max_score = 0
+    for d in ss:
+        s = d['set']
+        if s.sd() > 0:
+            x = abs(s.average() - p.z) / s.sd()
+        elif s.sd() == 0.0:
+            x = abs(s.average() - p.z) / 0.00001
+        else:
+            x = -1
+        d['score'] = x
+        if x > max_score:
+            max_score = x
+
+    max_abs_score = 0
+    target = None
+    for d in ss:
+        if d['score'] > -1 and max_score > 0:
+            d['score'] = (d['score'] / max_score) / 2.0 + d['distance']
+        elif max_score == 0:
+            d['score'] = d['distance']
+        else:
+            d['score'] = 0.999999
+        d['score'] = 1 - d['score']
+
+        if d['score'] > max_abs_score:
+            target = d
+            max_abs_score = d['score']
+
+    if p.point_set:
+        p.point_set.delete_point(p)
+    p.point_set = target['set']
+    target['set'].append(p)
 
 
 def union_sets(p, q, set_list):
@@ -182,28 +229,31 @@ def union_sets(p, q, set_list):
 
     set_list[small_index] = []
 
-def neighbours(l, dx, dy):
-    set_list = []
+def neighbours(l, dx, dy, set_list=[]):
     bar = progressbar.ProgressBar()
     for i in bar(range(0,dx)):
         for j in range(0,dy):
             for p in l[i][j]:
-                if p.point_set is None:
-                    s = [p]
-                    set_list.append(s)
-                    p.point_set = len(set_list) - 1
-                find_neighbour(l, p, i, j, 0.5, dx-1, dy-1, set_list)
+                find_neighbour(l, p, i, j, dx-1, dy-1, set_list)
     return set_list
 
 
-def get_random(r):
-    x = r.random()
-    y = r.random()
+def get_random(max_iter):
 
-    if x < 0.4 or x > 0.6 or y < 0.4 or y > 0.6:
-        return [x * 10.0, y*10.0, 0, None]
-    else:
-        return [x*10.0, y*10.0, 1, None]
+    r = random.Random()
+    result = []
+
+    for _ in range(0, max_iter):
+        x = r.random()
+        y = r.random()
+        z = r.random() * 0.1
+
+        if x < 0.4 or x > 0.6 or y < 0.4 or y > 0.6:
+            result.append(MyPoint(x, y, z))
+        else:
+            result.append(MyPoint(x, y, z + 1))
+
+    return result
 
 
 class PSet(object):

@@ -19,11 +19,14 @@ def main(arg_list):
     min_set_size = 100 / scale
 
     points = read_from_file(input_file)
+    #points = get_random(1000) # use for test only!
     p_map, dx, dy = get_map(points)
-    set_list = neighbours(p_map, int(dy), int(dx))
+    for i in range(1,10):
+        print "iteration " + str(i)
+        set_list = neighbours(p_map, int(dy), int(dx))
+        print(len(set_list))
 
-    print(len(set_list))
-    set_list = [x for x in set_list if len(x) >= min_set_size]
+    set_list = [x.get_list() for x in set_list if len(x.get_list()) >= min_set_size]
     print(len(set_list))
 
     last_list = []
@@ -37,9 +40,10 @@ def main(arg_list):
             a, b = x.boundary.coords.xy
             c = array.array('d', [mean for _ in range(0,len(a))])
             last_list.append((a, b, c))
-            print("done")
+            #print("done")
         except:
-            print("tego se ne udalo")
+            pass
+            #print("tego se ne udalo")
 
     filename = arg_list[2]
     with open(filename, 'wb') as f:
