@@ -179,29 +179,34 @@ def find_neighbour(l, p, a, b, xmax, ymax, set_list):
         p.point_set = s
         return
 
+    if len(ss) == 1:
+        s = ss[0]['set']
+        if p.point_set != s:
+            if p.point_set:
+                p.point_set.delete_point(p)
+            p.point_set = s
+            s.append(p)
+        return
+
     # calculate which set suits best
     max_score = 0
     for d in ss:
         s = d['set']
         if s.sd() > 0:
-            x = abs(s.average() - p.z) / s.sd()
+            score = abs(s.average() - p.z) / s.sd()
         elif s.sd() == 0.0:
-            x = abs(s.average() - p.z) / 0.00001
-        else:
-            x = -1
-        d['score'] = x
-        if x > max_score:
-            max_score = x
+            score = abs(s.average() - p.z) / 0.00001
+        d['score'] = score
+        if score > max_score:
+            max_score = score
 
     max_abs_score = 0
     target = None
     for d in ss:
-        if d['score'] > -1 and max_score > 0:
+        if max_score:
             d['score'] = (d['score'] / max_score) / 2.0 + d['distance']
-        elif max_score == 0:
-            d['score'] = d['distance']
         else:
-            d['score'] = 0.999999
+            d['score'] = d['distance']
         d['score'] = 1 - d['score']
 
         if d['score'] > max_abs_score:

@@ -7,7 +7,7 @@ class MySet(object):
         self._point_list = []
 
         self._average = 0.0
-        self._sd = -1
+        self._sd = 0.0
         self._sum = 0.0
 
         if p is not None:
@@ -38,12 +38,8 @@ class MySet(object):
         return self._point_list
 
     def delete_point(self, p):
-        old_lenght = len(self._point_list)
         self._point_list.remove(p)
         lenght = len(self._point_list)
-
-        if old_lenght == lenght:
-            return
 
         if lenght == 0:
             return
@@ -56,3 +52,5 @@ class MySet(object):
         # calculate standard derrivation
         if x > 1:
             self._calculate_sd(lenght)
+        else:
+            self._sd = 0.0

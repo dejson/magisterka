@@ -21,7 +21,7 @@ def main(arg_list):
     points = read_from_file(input_file)
     #points = get_random(1000) # use for test only!
     p_map, dx, dy = get_map(points)
-    for i in range(1,10):
+    for i in range(1,3):
         print "iteration " + str(i)
         set_list = neighbours(p_map, int(dy), int(dx))
         print(len(set_list))
