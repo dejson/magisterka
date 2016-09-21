@@ -17,12 +17,12 @@ class MyPoint(object):
 
         return math.sqrt(dx*dx + dy*dy + dz*dz)
 
-    def is_neighbour(self, p):
+    def is_neighbour(self, p, C=0.5, classify=False):
         distance = self.get_distance(p)
 
-        if distance < 0.3:
+        if distance < C:
             return True
-        elif distance < 0.6 and self.classification == p.classification and self.classification != 0:
+        elif classify and distance < C*2 and self.classification == p.classification and self.classification != 0:
             return True
 
         return False
