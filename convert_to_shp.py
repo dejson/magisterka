@@ -1,13 +1,12 @@
+import sys
 import os
 import pickle
 import osgeo.ogr as ogr
 import osgeo.osr as osr
 
-mypath = '/home/ddeja/Documents/studia/lidar/result/'
-
 def convert(filename, layer):
     
-    with open(mypath + filename, 'rb') as f:
+    with open(filename, 'rb') as f:
         f = pickle.load(f)
         result = []
 
@@ -26,25 +25,22 @@ def convert(filename, layer):
 
     return result
 
-def get_file_list():
-    onlyfiles = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
-    return onlyfiles
 
-def main():
+def main(argv):
+    filename = argv[0]
+    result_file = argv[1]
     import ipdb; ipdb.set_trace()
-    filelist = get_file_list()
 
     spatialReference = osr.SpatialReference()
     spatialReference.ImportFromProj4('+proj=longlat +ellps=GRS80 +vunits=m +no_defs ')
 
     driver = ogr.GetDriverByName('ESRI Shapefile')
-    shapeData = driver.CreateDataSource('tmp.shp')
+    shapeData = driver.CreateDataSource(result_file)
 
     layer = shapeData.CreateLayer('Layer1', spatialReference, ogr.wkbPolygon)
-    for f in filelist:
-        convert(f, layer)
+    convert(filename, layer)
 
     shapeData.Destroy()
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])

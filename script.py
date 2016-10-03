@@ -6,6 +6,7 @@ import math
 import random
 from liblas import file
 from my_point import MyPoint
+from my_set import MySet
 import progressbar
  
 def alpha_shape(points, alpha):
@@ -78,19 +79,20 @@ def get_map(points):
     Y = [p.y for p in points]
 
     xmin = math.floor(min(X))
-    dx = math.ceil(math.ceil(max(X)) - min(X))
+    dx = math.ceil(math.ceil(max(X)) - min(X)) + 1.0
 
     ymin = math.floor(min(Y))
-    dy = math.ceil(math.ceil(max(Y)) - min(Y))
+    dy = math.ceil(math.ceil(max(Y)) - min(Y)) + 1.0
 
     l = [[ [] for _ in range(0,int(dx))] for _ in range(0,int(dy))]
+
 
     bar = progressbar.ProgressBar()
     for p in bar(points):
         x = int(math.floor(p.x - xmin))
         y = int(math.floor(p.y - ymin))
         l[y][x].append(p)
-
+    
     return l, dx, dy
 
 
@@ -232,17 +234,17 @@ def find_neighbour_std(l, p, a, b, xmax, ymax, set_list):
     for n_list in n:
         for point in n_list:
             if point is not p:
-                if p.is_neighbour(point):
+                if p.is_neighbour(point, C=0.5, classify=False):
                     if point.point_set:
                         found = False
                         for d in ss:
-                            if d['set'] is point.point_set and d['distance'] > get_distance(p, point):
-                                d['distance'] = get_distance(p, point)
+                            if d['set'] is point.point_set and d['distance'] > p.get_distance(point):
+                                d['distance'] = p.get_distance(point)
                                 found = True
 
                         if found is False:
                             ss.append({
-                                'distance': get_distance(p, point),
+                                'distance': p.get_distance(point),
                                 'set': point.point_set
                                 })
 
@@ -298,19 +300,26 @@ def neighbours_std(l, dx, dy, set_list=[]):
     for i in bar(range(0,dx)):
         for j in range(0,dy):
             for p in l[i][j]:
-                find_neighbour(l, p, i, j, dx-1, dy-1, set_list)
+                find_neighbour_std(l, p, i, j, dx-1, dy-1, set_list)
     return set_list
 
 
-def get_random(r):
-    x = r.random()
-    y = r.random()
+def get_random(max_iter):
 
-    if x < 0.4 or x > 0.6 or y < 0.4 or y > 0.6:
-        return [x * 10.0, y*10.0, 0, None]
-    else:
-        return [x*10.0, y*10.0, 1, None]
+    r = random.Random()
+    result = []
 
+    for _ in range(0, max_iter):
+        x = r.random()
+        y = r.random()
+        z = r.random() * 0.1
+
+        if x < 0.4 or x > 0.6 or y < 0.4 or y > 0.6:
+            result.append(MyPoint(x, y, z))
+        else:
+            result.append(MyPoint(x, y, z + 1))
+
+    return result
 
 class PSet(object):
 

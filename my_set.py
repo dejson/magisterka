@@ -37,6 +37,18 @@ class MySet(object):
     def get_list(self):
         return self._point_list
 
+    def set_list(self, l):
+        if len(l) == 0:
+            return 
+        self._point_list = l
+        lenght = float(len(self._point_list))
+
+        self._sum = sum(p.z for p in self._point_list)
+        self._average = self._sum / lenght
+        x = len(self._point_list)
+        if x > 1:
+            self._calculate_sd(lenght)
+
     def delete_point(self, p):
         self._point_list.remove(p)
         lenght = len(self._point_list)

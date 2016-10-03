@@ -17,7 +17,7 @@ class MyPoint(object):
 
         return math.sqrt(dx*dx + dy*dy + dz*dz)
 
-    def is_neighbour(self, p, C=0.5, classify=False):
+    def is_neighbour(self, p, C=0.3, classify=True):
         distance = self.get_distance(p)
 
         if distance < C:
