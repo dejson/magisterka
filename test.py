@@ -6,6 +6,8 @@ import time
 import random
 from my_point import MyPoint
 from mpl_toolkits.mplot3d import Axes3D
+import shapely.geometry
+
 
 def prepare_data(n):
     r = random.Random()
@@ -20,12 +22,12 @@ def prepare_data(n):
         else:
             z = r.random() * 0.1 + (x-0.4)*5
 
-        result.append(MyPoint(x,y,z))
+        result.append(MyPoint(x*10.0,y*10.0,z))
 
     return result
 
 #data = get_random(1000)
-data = prepare_data(1000)
+data = prepare_data(3000)
 b_data = copy.deepcopy(data)
 
 def plot_points(data):
@@ -43,7 +45,7 @@ def plot_points(data):
 
 
 plot_points(data)
-plt.axis([-0.2, 1.2, -0.2, 1.2])
+plt.axis([-0.2, 10.2, -0.2, 10.2])
 plt.show()
 
 #3d plot
@@ -83,7 +85,7 @@ plot_points(data)
 for p in last_list:
     plt.plot( p[0], p[1], linewidth=2.0)
 
-plt.axis([-0.2, 1.2, -0.2, 1.2])
+plt.axis([-0.2, 10.2, -0.2, 10.2])
 plt.show()
 
 # lagorytm iteracyjny
@@ -113,24 +115,34 @@ plot_points(data)
 for p in last_list:
     plt.plot( p[0], p[1], linewidth=2.0)
 
-plt.axis([-0.2, 1.2, -0.2, 1.2])
+plt.axis([-0.2, 10.2, -0.2, 10.2])
 plt.show()
 
 
 #druga runda
-for _ in range(1,7):
+for _ in range(1,50):
     set_list = neighbours_std(p_map, int(dy), int(dx), set_list)
+
+for _ in range(1,10):
+    set_list = join_set_std(set_list, p_map, int(dx), int(dy))
 f_list = [x.get_list() for x in set_list if len(x.get_list()) >= 4]
 print len(f_list)
 
+
 last_list = []
 for s in f_list:
-    x, y = alpha_shape(s, 0.4)
+    try:
+        x, y = alpha_shape(s, 0.4)
+        if type(x) != shapely.geometry.polygon.Polygon:
+            x, y = alpha_shape(s, 0.1)
 
-    mean = sum(point.z for point in s) / len(s)
-    a, b = x.boundary.coords.xy
-    c = array.array('d', [mean for _ in range(0,len(a))])
-    last_list.append((a, b, c))
+        mean = sum(point.z for point in s) / len(s)
+        a, b = x.boundary.coords.xy
+        c = array.array('d', [mean for _ in range(0,len(a))])
+        last_list.append((a, b, c))
+        print "done"
+    except:
+        print "not done :("
 
 end = time.time()
 
@@ -141,5 +153,5 @@ plot_points(data)
 for p in last_list:
     plt.plot( p[0], p[1], linewidth=2.0)
 
-plt.axis([-0.2, 1.2, -0.2, 1.2])
+plt.axis([-0.2, 10.2, -0.2, 10.2])
 plt.show()

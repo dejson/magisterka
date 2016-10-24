@@ -127,7 +127,7 @@ def find_neighbour(l, p, a, b, d, xmax, ymax, set_list):
     p - point
     a,b - quad that point p is in
     s - set that point p is in
-    d - distance
+7    d - distance
     """
 
     x = p.x - math.floor(p.x)
@@ -157,7 +157,7 @@ def find_neighbour(l, p, a, b, d, xmax, ymax, set_list):
     for n_list in n:
         for point in n_list:
             if point is not p:
-                if p.is_neighbour(point):
+                if p.is_neighbour(point, C=0.5):
                     if point.point_set is None:
                         set_list[p.point_set].append(point)
                         point.point_set = p.point_set
@@ -234,7 +234,7 @@ def find_neighbour_std(l, p, a, b, xmax, ymax, set_list):
     for n_list in n:
         for point in n_list:
             if point is not p:
-                if p.is_neighbour(point, C=0.5, classify=False):
+                if p.is_neighbour(point, C=0.3, classify=False):
                     if point.point_set:
                         found = False
                         for d in ss:
@@ -266,6 +266,7 @@ def find_neighbour_std(l, p, a, b, xmax, ymax, set_list):
 
     # calculate which set suits best
     max_score = 0
+    max_set = 0
     for d in ss:
         s = d['set']
         if s.sd() > 0:
@@ -276,11 +277,13 @@ def find_neighbour_std(l, p, a, b, xmax, ymax, set_list):
         if score > max_score:
             max_score = score
 
+
     max_abs_score = 0
     target = None
     for d in ss:
+        s = d['set']
         if max_score:
-            d['score'] = (d['score'] / max_score) / 2.0 + d['distance']
+            d['score'] = (d['score'] / max_score) * 0.9 + d['distance'] * 0.2
         else:
             d['score'] = d['distance']
         d['score'] = 1 - d['score']
@@ -302,6 +305,77 @@ def neighbours_std(l, dx, dy, set_list=[]):
             for p in l[i][j]:
                 find_neighbour_std(l, p, i, j, dx-1, dy-1, set_list)
     return set_list
+
+
+def join_set_std(sets, l, dx, dy):
+
+    bar = progressbar.ProgressBar()
+    for s in bar(sets):
+        n_sets = _neighbour_sets(s, l, dx, dy)
+
+        best = 0
+        target = None
+        for n_set in n_sets:
+            x = max(s.sd(), n_set.sd())
+            y = min(s.sd(), n_set.sd())
+
+            y = 0.00000001 if y == 0 else y
+
+            if abs(s.average() - n_set.average()) < 0.05 and x/y > 0.1:
+                target = n_set
+                if target.len() > s.len():
+                    target.join(s)
+                else:
+                    s.join(target)
+
+            elif y != 0:
+                if x/y > 0.5:
+                    target = n_set
+                    if target.len() > s.len():
+                        target.join(s)
+                    else:
+                        s.join(target)
+
+    return sets
+
+
+def _neighbour_sets(s, l, dx, dy):
+    result = []
+
+    for p in s.get_list():
+        a = int(math.floor(p.x - dx))
+        b = int(math.floor(p.y - dy))
+
+        x = p.x - math.floor(p.x)
+        y = p.y - math.floor(p.y)
+    
+        if x - 0.5 < 0:
+            x = -1
+        else:
+            x = 1
+    
+        if y - 0.5 < 0:
+            y = -1
+        else:
+            y = 1
+    
+        n = []
+        n.append(l[a][b])
+        if dy > a+y >=0:
+            n.append(l[a+y][b])
+        if dx > b+x >=0:
+            n.append(l[a][b+x])
+        if  dy > a+y >=0 and dx > b+x >=0:
+            n.append(l[a+y][b+x])
+
+        for n_list in n:
+            for pp in n_list:
+                if pp.point_set != p.point_set and p.is_neighbour(pp, 0.5, False):
+                    if pp.point_set not in result:
+                        result.append(pp.point_set)
+
+    return result
+    
 
 
 def get_random(max_iter):

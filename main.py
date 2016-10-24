@@ -25,7 +25,7 @@ def main(arg_list):
     set_list = neighbours(p_map, int(dy), int(dx))
 
 # iteracje na topie algorytmu zwyklego
-   # """
+    #"""
     sets = []
     
     bar = progressbar.ProgressBar()
@@ -39,7 +39,7 @@ def main(arg_list):
     
     set_list = sets
     
-    for _ in range(1,2):
+    for _ in range(1,10):
         set_list = neighbours_std(p_map, int(dy), int(dx), set_list)
 
     #"""
